@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Moments"
 include(":app")
- 
+include(":sdk")
+project(":sdk").projectDir = File(rootDir, "opencv/sdk/")

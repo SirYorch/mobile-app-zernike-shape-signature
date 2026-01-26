@@ -1,0 +1,17 @@
+{
+  "installationFolder": "/home/siryorch/AndroidStudioProjects/Moments/opencv/sdk/build/intermediates/prefab_package/debug/prefab",
+  "gradlePath": ":sdk",
+  "packageInfo": {
+    "packageName": "sdk",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "opencv_jni_shared",
+        "moduleHeaders": "/home/siryorch/AndroidStudioProjects/Moments/opencv/sdk/native/jni/include",
+        "moduleExportLibraries": [],
+        "abis": []
+      }
+    ]
+  }
+}

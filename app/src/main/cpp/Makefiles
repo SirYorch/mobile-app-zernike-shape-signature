@@ -1,0 +1,342 @@
+# Makefile para compilar ambas aplicaciones: Médica (ITK+OpenCV) y Video (OpenCV)
+
+# ==================== EJECUTABLES ====================
+TARGET_MEDICA = SegmentacionMedica_CuevaJ_KevinYansaguano.med
+TARGET_VIDEO_CPU = video_pipeline_cpu
+TARGET_VIDEO_GPU = video_pipeline_gpu
+
+# ==================== ARCHIVOS FUENTE ====================
+SOURCES_MEDICA = secondary.cpp
+SOURCES_VIDEO_CPU = video_pipeline.cpp
+SOURCES_VIDEO_GPU = video_pipeline_gpu.cpp
+
+OBJECTS_MEDICA = $(SOURCES_MEDICA:.cpp=.o)
+OBJECTS_VIDEO_CPU = $(SOURCES_VIDEO_CPU:.cpp=.o)
+OBJECTS_VIDEO_GPU = $(SOURCES_VIDEO_GPU:.cpp=.o)
+
+# ==================== COMPILADOR ====================
+CXX = g++
+
+# ==================== FLAGS COMUNES ====================
+CXXFLAGS = -std=c++17 -Wall -O3 -march=native
+
+# ==================== CUDA FLAGS ====================
+CUDA_PATH = /usr/local/cuda
+CUDA_CFLAGS = -I$(CUDA_PATH)/include
+CUDA_LIBS = -L$(CUDA_PATH)/lib64 -lcudart -lcublas
+
+# ==================== OPENCV FLAGS ====================
+OPENCV_CFLAGS = -I/usr/local/include/opencv4
+OPENCV_LIBS_CPU = -L/usr/local/lib \
+                  -lopencv_core \
+                  -lopencv_imgproc \
+                  -lopencv_imgcodecs \
+                  -lopencv_highgui \
+                  -lopencv_videoio
+
+OPENCV_LIBS_GPU = $(OPENCV_LIBS_CPU) \
+                  -lopencv_cudaarithm \
+                  -lopencv_cudaimgproc \
+                  -lopencv_cudawarping \
+                  -lopencv_cudafilters
+
+# ==================== ITK FLAGS ====================
+ITK_VERSION = 5.4
+ITK_CFLAGS = -I/usr/local/include/ITK-$(ITK_VERSION)
+ITK_LIBS = -L/usr/local/lib \
+           -lITKCommon-$(ITK_VERSION) \
+           -lITKIOImageBase-$(ITK_VERSION) \
+           -lITKIOPNG-$(ITK_VERSION) \
+           -lITKIOJPEG-$(ITK_VERSION) \
+           -lITKIOTIFF-$(ITK_VERSION) \
+           -lITKIOGDCM-$(ITK_VERSION) \
+           -lITKMetaIO-$(ITK_VERSION) \
+           -lITKIONRRD-$(ITK_VERSION) \
+           -lITKStatistics-$(ITK_VERSION) \
+           -lITKVNLInstantiation-$(ITK_VERSION) \
+           -litkvcl-$(ITK_VERSION) \
+           -litkvnl-$(ITK_VERSION) \
+           -litkvnl_algo-$(ITK_VERSION) \
+           -litkv3p_netlib-$(ITK_VERSION) \
+           -litkNetlibSlatec-$(ITK_VERSION) \
+           -litksys-$(ITK_VERSION) \
+           -litkdouble-conversion-$(ITK_VERSION) \
+           -litkpng-$(ITK_VERSION) \
+           -litkjpeg-$(ITK_VERSION) \
+           -litktiff-$(ITK_VERSION) \
+           -litkzlib-$(ITK_VERSION) \
+           -lgdcmCommon \
+           -lgdcmDICT \
+           -lgdcmDSED \
+           -lgdcmIOD \
+           -lgdcmMSFF
+
+# ==================== CURL FLAGS ====================
+CURL_CFLAGS = -I/usr/include/curl
+CURL_LIBS = -lcurl
+
+# ==================== COMBINACIONES ====================
+# Para aplicación médica (con ITK, CURL, OpenCV)
+MEDICA_CFLAGS = $(CXXFLAGS) $(OPENCV_CFLAGS) $(ITK_CFLAGS) $(CURL_CFLAGS)
+MEDICA_LIBS = $(OPENCV_LIBS_CPU) $(ITK_LIBS) $(CURL_LIBS) -lpthread
+
+# Para aplicación de video CPU (solo OpenCV)
+VIDEO_CPU_CFLAGS = $(CXXFLAGS) $(OPENCV_CFLAGS)
+VIDEO_CPU_LIBS = $(OPENCV_LIBS_CPU) -lpthread
+
+# Para aplicación de video GPU (OpenCV + CUDA)
+VIDEO_GPU_CFLAGS = $(CXXFLAGS) $(OPENCV_CFLAGS) $(CUDA_CFLAGS)
+VIDEO_GPU_LIBS = $(OPENCV_LIBS_GPU) $(CUDA_LIBS) -lpthread
+
+# ==================== REGLAS ====================
+
+# Compilar todos los proyectos
+all: $(TARGET_MEDICA) $(TARGET_VIDEO_CPU) $(TARGET_VIDEO_GPU)
+	@echo ""
+	@echo "========================================="
+	@echo "✓ Todos los proyectos compilados"
+	@echo "========================================="
+	@echo "  • $(TARGET_MEDICA)"
+	@echo "  • $(TARGET_VIDEO_CPU)"
+	@echo "  • $(TARGET_VIDEO_GPU)"
+	@echo ""
+
+# ==================== APLICACIÓN MÉDICA ====================
+
+$(TARGET_MEDICA): $(OBJECTS_MEDICA)
+	@echo "======================================"
+	@echo "Enlazando $(TARGET_MEDICA)..."
+	@echo "======================================"
+	$(CXX) $(OBJECTS_MEDICA) -o $(TARGET_MEDICA) $(MEDICA_LIBS)
+	@echo "✓ Aplicación médica compilada!"
+	@echo ""
+
+# Compilar objeto de aplicación médica
+secondary.o: secondary.cpp
+	@echo "Compilando aplicación médica..."
+	$(CXX) $(MEDICA_CFLAGS) -c secondary.cpp -o secondary.o
+
+# ==================== APLICACIÓN VIDEO CPU ====================
+
+$(TARGET_VIDEO_CPU): $(OBJECTS_VIDEO_CPU)
+	@echo "======================================"
+	@echo "Enlazando $(TARGET_VIDEO_CPU)..."
+	@echo "======================================"
+	$(CXX) $(OBJECTS_VIDEO_CPU) -o $(TARGET_VIDEO_CPU) $(VIDEO_CPU_LIBS)
+	@echo "✓ Aplicación de video CPU compilada!"
+	@echo ""
+
+video_pipeline.o: video_pipeline.cpp
+	@echo "Compilando aplicación de video CPU..."
+	$(CXX) $(VIDEO_CPU_CFLAGS) -c video_pipeline.cpp -o video_pipeline.o
+
+# ==================== APLICACIÓN VIDEO GPU ====================
+
+$(TARGET_VIDEO_GPU): $(OBJECTS_VIDEO_GPU)
+	@echo "======================================"
+	@echo "Enlazando $(TARGET_VIDEO_GPU)..."
+	@echo "======================================"
+	$(CXX) $(OBJECTS_VIDEO_GPU) -o $(TARGET_VIDEO_GPU) $(VIDEO_GPU_LIBS)
+	@echo "✓ Aplicación de video GPU compilada!"
+	@echo ""
+
+video_pipeline_gpu.o: video_pipeline_gpu.cpp
+	@echo "Compilando aplicación de video GPU..."
+	$(CXX) $(VIDEO_GPU_CFLAGS) -c video_pipeline_gpu.cpp -o video_pipeline_gpu.o
+
+# ==================== COMPILACIÓN INDIVIDUAL ====================
+
+medica: $(TARGET_MEDICA)
+	@echo "✓ Solo aplicación médica compilada"
+
+video-cpu: $(TARGET_VIDEO_CPU)
+	@echo "✓ Solo aplicación de video CPU compilada"
+
+video-gpu: $(TARGET_VIDEO_GPU)
+	@echo "✓ Solo aplicación de video GPU compilada"
+
+# ==================== LIMPIEZA ====================
+
+clean:
+	@echo "Limpiando archivos..."
+	rm -f $(OBJECTS_MEDICA) $(OBJECTS_VIDEO_CPU) $(OBJECTS_VIDEO_GPU) \
+	      $(TARGET_MEDICA) $(TARGET_VIDEO_CPU) $(TARGET_VIDEO_GPU) *.png *.o
+	@echo "✓ Limpieza completada!"
+
+clean-medica:
+	@echo "Limpiando solo aplicación médica..."
+	rm -f $(OBJECTS_MEDICA) $(TARGET_MEDICA)
+	@echo "✓ Limpieza médica completada!"
+
+clean-video-cpu:
+	@echo "Limpiando solo aplicación de video CPU..."
+	rm -f $(OBJECTS_VIDEO_CPU) $(TARGET_VIDEO_CPU)
+	@echo "✓ Limpieza video CPU completada!"
+
+clean-video-gpu:
+	@echo "Limpiando solo aplicación de video GPU..."
+	rm -f $(OBJECTS_VIDEO_GPU) $(TARGET_VIDEO_GPU)
+	@echo "✓ Limpieza video GPU completada!"
+
+# ==================== EJECUCIÓN ====================
+
+run-medica: $(TARGET_MEDICA)
+	@echo "======================================"
+	@echo "Ejecutando $(TARGET_MEDICA)..."
+	@echo "======================================"
+	./$(TARGET_MEDICA)
+	@echo ""
+
+run-video-cpu: $(TARGET_VIDEO_CPU)
+	@echo "======================================"
+	@echo "Ejecutando $(TARGET_VIDEO_CPU)..."
+	@echo "======================================"
+	./$(TARGET_VIDEO_CPU)
+	@echo ""
+
+run-video-gpu: $(TARGET_VIDEO_GPU)
+	@echo "======================================"
+	@echo "Ejecutando $(TARGET_VIDEO_GPU)..."
+	@echo "======================================"
+	./$(TARGET_VIDEO_GPU)
+	@echo ""
+
+# ==================== TESTING ====================
+
+test-medica: clean-medica medica run-medica
+
+test-video-cpu: clean-video-cpu video-cpu run-video-cpu
+
+test-video-gpu: clean-video-gpu video-gpu run-video-gpu
+
+test-all: clean all
+	@echo "Selecciona qué aplicación ejecutar:"
+	@echo "  make run-medica     - Aplicación médica"
+	@echo "  make run-video-cpu  - Video CPU"
+	@echo "  make run-video-gpu  - Video GPU"
+
+# ==================== INFORMACIÓN ====================
+
+info:
+	@echo "========================================="
+	@echo "=== Información de Compilación ==="
+	@echo "========================================="
+	@echo "Compilador: $(CXX)"
+	@echo "Flags base: $(CXXFLAGS)"
+	@echo ""
+	@echo "=== Proyectos ==="
+	@echo "1. $(TARGET_MEDICA)"
+	@echo "   - Fuente: $(SOURCES_MEDICA)"
+	@echo "   - Requiere: ITK, OpenCV, CURL"
+	@echo ""
+	@echo "2. $(TARGET_VIDEO_CPU)"
+	@echo "   - Fuente: $(SOURCES_VIDEO_CPU)"
+	@echo "   - Requiere: OpenCV"
+	@echo ""
+	@echo "3. $(TARGET_VIDEO_GPU)"
+	@echo "   - Fuente: $(SOURCES_VIDEO_GPU)"
+	@echo "   - Requiere: OpenCV + CUDA"
+	@echo ""
+	@echo "=== Versiones Instaladas ==="
+	@echo -n "OpenCV: "
+	@pkg-config --modversion opencv4 2>/dev/null || echo "✗ No encontrado"
+	@echo -n "ITK: "
+	@test -d /usr/local/include/ITK-$(ITK_VERSION) && echo "✓ $(ITK_VERSION)" || echo "✗ No encontrado"
+	@echo -n "CUDA: "
+	@which nvcc >/dev/null 2>&1 && nvcc --version | grep release || echo "✗ No encontrado"
+	@echo -n "CURL: "
+	@curl-config --version 2>/dev/null || echo "✗ No encontrado"
+	@echo ""
+
+# ==================== DEBUGGING ====================
+
+debug-libs-medica: $(TARGET_MEDICA)
+	@echo "========================================="
+	@echo "=== Librerías de Aplicación Médica ==="
+	@echo "========================================="
+	@ldd $(TARGET_MEDICA) | grep -E "(opencv|itk|cuda|curl)"
+
+debug-libs-video-cpu: $(TARGET_VIDEO_CPU)
+	@echo "========================================="
+	@echo "=== Librerías de Video CPU ==="
+	@echo "========================================="
+	@ldd $(TARGET_VIDEO_CPU) | grep -E "opencv"
+
+debug-libs-video-gpu: $(TARGET_VIDEO_GPU)
+	@echo "========================================="
+	@echo "=== Librerías de Video GPU ==="
+	@echo "========================================="
+	@ldd $(TARGET_VIDEO_GPU) | grep -E "(opencv|cuda)"
+
+debug-libs: debug-libs-medica debug-libs-video-cpu debug-libs-video-gpu
+
+# ==================== VERIFICACIÓN ====================
+
+check-deps:
+	@echo "========================================="
+	@echo "=== Verificando Dependencias ==="
+	@echo "========================================="
+	@echo "Para aplicación médica:"
+	@echo -n "  • OpenCV 4.x: "
+	@pkg-config --exists opencv4 && echo "✓" || echo "✗"
+	@echo -n "  • ITK $(ITK_VERSION): "
+	@test -d /usr/local/include/ITK-$(ITK_VERSION) && echo "✓" || echo "✗"
+	@echo -n "  • CURL: "
+	@which curl-config >/dev/null 2>&1 && echo "✓" || echo "✗"
+	@echo ""
+	@echo "Para aplicación de video CPU:"
+	@echo -n "  • OpenCV 4.x: "
+	@pkg-config --exists opencv4 && echo "✓" || echo "✗"
+	@echo -n "  • Cámara: "
+	@test -e /dev/video0 && echo "✓ /dev/video0" || echo "⚠ No detectada"
+	@echo ""
+	@echo "Para aplicación de video GPU:"
+	@echo -n "  • OpenCV 4.x: "
+	@pkg-config --exists opencv4 && echo "✓" || echo "✗"
+	@echo -n "  • CUDA: "
+	@which nvcc >/dev/null 2>&1 && echo "✓" || echo "✗"
+	@echo -n "  • OpenCV con CUDA: "
+	@test -f /usr/local/lib/libopencv_cudaimgproc.so && echo "✓" || echo "✗"
+	@echo ""
+
+# ==================== AYUDA ====================
+
+help:
+	@echo "========================================="
+	@echo "=== Makefile para Proyectos Médicos ==="
+	@echo "========================================="
+	@echo ""
+	@echo "COMPILACIÓN:"
+	@echo "  make              - Compilar todos los proyectos"
+	@echo "  make medica       - Compilar solo app médica"
+	@echo "  make video-cpu    - Compilar solo video CPU"
+	@echo "  make video-gpu    - Compilar solo video GPU"
+	@echo ""
+	@echo "EJECUCIÓN:"
+	@echo "  make run-medica     - Ejecutar app médica"
+	@echo "  make run-video-cpu  - Ejecutar video CPU"
+	@echo "  make run-video-gpu  - Ejecutar video GPU"
+	@echo ""
+	@echo "TESTING:"
+	@echo "  make test-medica    - Limpiar + compilar + ejecutar médica"
+	@echo "  make test-video-cpu - Limpiar + compilar + ejecutar CPU"
+	@echo "  make test-video-gpu - Limpiar + compilar + ejecutar GPU"
+	@echo "  make test-all       - Limpiar + compilar todos"
+	@echo ""
+	@echo "LIMPIEZA:"
+	@echo "  make clean            - Limpiar todo"
+	@echo "  make clean-medica     - Limpiar solo médica"
+	@echo "  make clean-video-cpu  - Limpiar solo video CPU"
+	@echo "  make clean-video-gpu  - Limpiar solo video GPU"
+	@echo ""
+	@echo "INFORMACIÓN:"
+	@echo "  make info         - Info de configuración"
+	@echo "  make debug-libs   - Ver librerías enlazadas"
+	@echo "  make check-deps   - Verificar dependencias"
+	@echo "  make help         - Esta ayuda"
+	@echo ""
+
+.PHONY: all medica video-cpu video-gpu clean clean-medica clean-video-cpu clean-video-gpu \
+        run-medica run-video-cpu run-video-gpu test-medica test-video-cpu test-video-gpu test-all \
+        info debug-libs-medica debug-libs-video-cpu debug-libs-video-gpu debug-libs \
+        check-deps help
