@@ -28,24 +28,25 @@
 
 
             <TextView
+                android:id="@+id/tvLabel2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Dibuja una figura"
+                android:textAlignment="center"
+                android:textColor="#2C3E50"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/tvLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Dibuja una figura"
+                android:text="Jorge Cueva -- Kevin Yansaguano"
                 android:textAlignment="center"
-                android:textSize="22sp"
-                android:textColor="#2C3E50"
-                android:textStyle="bold"
-                android:paddingBottom="8dp"/>
+                android:textColor="#57dfd0"
+                android:textSize="12sp"/>
 
-            <TextView
-                android:id="@+id/tvfigura"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Predicción: ..."
-                android:textAlignment="center"
-                android:textSize="16sp"
-                android:textColor="#5D6D7E"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

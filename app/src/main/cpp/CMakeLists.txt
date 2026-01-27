@@ -18,7 +18,6 @@ add_library(
     moments
     SHARED
     native-lib.cpp
-    shape_classifier.cpp
 )
 
 find_library(

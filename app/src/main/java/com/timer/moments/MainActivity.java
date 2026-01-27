@@ -1,11 +1,15 @@
 package com.timer.moments;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         // Inicializar el reconocedor
         try {
             recognizer = new ShapeRecognizer(this);
-            tvLabel.setText("Sistema listo. Dibuja una forma.");
         } catch (Exception e) {
             tvLabel.setText("Error al inicializar: " + e.getMessage());
             Toast.makeText(this, "Error cargando OpenCV", Toast.LENGTH_LONG).show();
@@ -34,58 +37,29 @@ public class MainActivity extends AppCompatActivity {
 
         btnClear.setOnClickListener(v -> {
             drawView.clearCanvas();
-            tvLabel.setText("Canvas limpio. Dibuja una forma.");
         });
 
         btnPredict.setOnClickListener(v -> {
-            if (recognizer == null) {
-                tvLabel.setText("Error: Sistema no inicializado");
-                return;
-            }
+            Bitmap bitmap = drawView.getBitmap();
+            if (bitmap != null) {
+                try {
+                    // Guardar bitmap en archivo temporal
+                    File cachePath = new File(getCacheDir(), "images");
+                    cachePath.mkdirs();
+                    File imagePath = new File(cachePath, "predict_image.png");
+                    FileOutputStream stream = new FileOutputStream(imagePath);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    stream.close();
 
-            try {
-                // Obtener bitmap del canvas
-                Bitmap bitmap = drawView.getBitmap();
+                    // Iniciar actividad de resultados
+                    Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                    intent.putExtra("image_path", imagePath.getAbsolutePath());
+                    startActivity(intent);
 
-                // Clasificar
-                String result = recognizer.classify(bitmap);
-
-                // Obtener confianza
-                float confidence = recognizer.getLastConfidence();
-
-                // Mostrar resultado
-                String displayText = "";
-                String emoji = "";
-
-                switch (result.toLowerCase()) {
-                    case "circle":
-                        emoji = "⭕";
-                        displayText = String.format("Círculo detectado\n(Confianza: %.1f%%)",
-                                confidence * 100);
-                        break;
-                    case "triangle":
-                        emoji = "🔺";
-                        displayText = String.format("Triángulo detectado\n(Confianza: %.1f%%)",
-                                confidence * 100);
-                        break;
-                    case "square":
-                        emoji = "⬜";
-                        displayText = String.format("Cuadrado detectado\n(Confianza: %.1f%%)",
-                                confidence * 100);
-                        break;
-                    case "desconocido":
-                        emoji = "❓";
-                        displayText = "Forma no reconocida";
-                        break;
-                    default:
-                        displayText = "Resultado: " + result;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Error al guardar imagen", Toast.LENGTH_SHORT).show();
                 }
-
-                tvLabel.setText(emoji + " " + displayText);
-
-            } catch (Exception e) {
-                tvLabel.setText("Error en clasificación: " + e.getMessage());
-                e.printStackTrace();
             }
         });
     }

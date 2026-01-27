@@ -24,7 +24,7 @@ public class DrawView extends View {
 
     private void init() {
         paint = new Paint();
-        paint.setColor(Color.WHITE);  // Trazo blanco
+        paint.setColor(Color.BLACK);  // Trazo blanco
         paint.setStrokeWidth(25f);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
@@ -39,7 +39,7 @@ public class DrawView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         drawCanvas = new Canvas(canvasBitmap);
-        drawCanvas.drawColor(Color.BLACK);  // Fondo negro
+        drawCanvas.drawColor(Color.WHITE);  // Fondo negro
     }
 
     @Override
@@ -72,7 +72,7 @@ public class DrawView extends View {
 
     public void clearCanvas() {
         path.reset();
-        drawCanvas.drawColor(Color.BLACK);
+        drawCanvas.drawColor(Color.WHITE);
         invalidate();
     }
 

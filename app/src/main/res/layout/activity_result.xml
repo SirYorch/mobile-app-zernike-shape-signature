@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    android:background="#121212">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resultado del Procesamiento"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <ImageView
+        android:id="@+id/ivResult"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:scaleType="fitCenter"
+        android:background="#333333"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:id="@+id/tvPrediction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Predicción: ..."
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#03DAC6"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Descriptores de Fourier:"
+        android:textSize="16sp"
+        android:textColor="#BB86FC"
+        android:layout_marginBottom="4dp"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#1E1E1E"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tvHuMoments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Calculando..."
+            android:fontFamily="monospace"
+            android:textColor="#E0E0E0"
+            android:textSize="12sp"/>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Volver"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>
