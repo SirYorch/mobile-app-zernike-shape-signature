@@ -37,7 +37,24 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Descriptores de Fourier:"
+        android:text="Firma de Forma (Distancia Centroidal):"
+        android:textSize="16sp"
+        android:textColor="#BB86FC"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"/>
+
+    <ImageView
+        android:id="@+id/ivShapeSignature"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="fitXY"
+        android:background="#2C2C2C"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Descriptores de Fourier y Coordenadas:"
         android:textSize="16sp"
         android:textColor="#BB86FC"
         android:layout_marginBottom="4dp"/>

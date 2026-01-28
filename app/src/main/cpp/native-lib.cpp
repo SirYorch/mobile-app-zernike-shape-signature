@@ -173,4 +173,138 @@ Java_com_timer_moments_ShapeRecognizer_nativeGetFourierDescriptors(
     return result;
 }
 
+// ===============================
+// Shape Signature: Distancia Centroidal
+// ===============================
+JNIEXPORT jdoubleArray JNICALL
+Java_com_timer_moments_ShapeRecognizer_nativeGetCentroidDistanceSignature(
+        JNIEnv* env,
+        jobject,
+        jobject input) {
+
+    AndroidBitmapInfo info;
+    void* pixels = nullptr;
+
+    if (AndroidBitmap_getInfo(env, input, &info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return env->NewDoubleArray(0);
+    }
+    if (AndroidBitmap_lockPixels(env, input, &pixels) < 0) {
+        return env->NewDoubleArray(0);
+    }
+
+    cv::Mat src(info.height, info.width, CV_8UC4, pixels);
+    cv::Mat gray;
+    cv::cvtColor(src, gray, cv::COLOR_RGBA2GRAY);
+    AndroidBitmap_unlockPixels(env, input);
+
+    // Segmentación
+    cv::Mat binary;
+    cv::adaptiveThreshold(gray, binary, 255, 
+        cv::ADAPTIVE_THRESH_GAUSSIAN_C, 
+        cv::THRESH_BINARY_INV, 
+        11, 2);
+
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
+    if (contours.empty()) return env->NewDoubleArray(0);
+
+    size_t largestIndex = 0;
+    double largestArea = 0;
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = cv::contourArea(contours[i]);
+        if (area > largestArea) {
+            largestArea = area;
+            largestIndex = i;
+        }
+    }
+    std::vector<cv::Point> contour = contours[largestIndex];
+    size_t N = contour.size();
+    if (N < 3) return env->NewDoubleArray(0);
+
+    // Calcular Centroide
+    cv::Moments m = cv::moments(contour);
+    double xc = m.m10 / (m.m00 + 1e-5); 
+    double yc = m.m01 / (m.m00 + 1e-5);
+
+    // Calcular firma (distancia al centroide)
+    std::vector<double> signature;
+    signature.reserve(N);
+
+    for (const auto& p : contour) {
+        double dx = p.x - xc;
+        double dy = p.y - yc;
+        double dist = std::sqrt(dx*dx + dy*dy);
+        signature.push_back(dist);
+    }
+
+    jdoubleArray result = env->NewDoubleArray(signature.size());
+    env->SetDoubleArrayRegion(result, 0, signature.size(), signature.data());
+    return result;
+}
+
+// ===============================
+// Complex Coordinates Signal
+// ===============================
+JNIEXPORT jdoubleArray JNICALL
+Java_com_timer_moments_ShapeRecognizer_nativeGetComplexSignal(
+        JNIEnv* env,
+        jobject,
+        jobject input) {
+
+    AndroidBitmapInfo info;
+    void* pixels = nullptr;
+
+    if (AndroidBitmap_getInfo(env, input, &info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return env->NewDoubleArray(0);
+    }
+    if (AndroidBitmap_lockPixels(env, input, &pixels) < 0) {
+        return env->NewDoubleArray(0);
+    }
+
+    cv::Mat src(info.height, info.width, CV_8UC4, pixels);
+    cv::Mat gray;
+    cv::cvtColor(src, gray, cv::COLOR_RGBA2GRAY);
+    AndroidBitmap_unlockPixels(env, input);
+
+    cv::Mat binary;
+    cv::adaptiveThreshold(gray, binary, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 11, 2);
+
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
+    if (contours.empty()) return env->NewDoubleArray(0);
+
+    size_t largestIndex = 0;
+    double largestArea = 0;
+    for (size_t i = 0; i < contours.size(); i++) {
+        double area = cv::contourArea(contours[i]);
+        if (area > largestArea) {
+            largestArea = area;
+            largestIndex = i;
+        }
+    }
+    std::vector<cv::Point> contour = contours[largestIndex];
+    size_t N = contour.size();
+    if (N < 1) return env->NewDoubleArray(0);
+
+    cv::Moments m = cv::moments(contour);
+    double xc = m.m10 / (m.m00 + 1e-5); 
+    double yc = m.m01 / (m.m00 + 1e-5);
+
+    // Devolver [real1, imag1, real2, imag2, ...]
+    // Centrados en (0,0) usando el centroide
+    std::vector<double> complexData;
+    complexData.reserve(N * 2);
+
+    for (const auto& p : contour) {
+        complexData.push_back(p.x - xc); // Real
+        complexData.push_back(p.y - yc); // Imag
+    }
+
+    jdoubleArray result = env->NewDoubleArray(complexData.size());
+    env->SetDoubleArrayRegion(result, 0, complexData.size(), complexData.data());
+    return result;
+}
+
 } // extern "C"

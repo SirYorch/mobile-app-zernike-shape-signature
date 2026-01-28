@@ -166,4 +166,39 @@ public class ShapeRecognizer {
      * Calcula Descriptores de Fourier usando OpenCV
      */
     private native double[] nativeGetFourierDescriptors(Bitmap input);
+
+    /**
+     * Calcula la firma de forma (Distancia Centroidal)
+     */
+    private native double[] nativeGetCentroidDistanceSignature(Bitmap input);
+
+    /**
+     * Obtiene la señal de coordenadas complejas (Real, Imag)
+     */
+    private native double[] nativeGetComplexSignal(Bitmap input);
+
+    /**
+     * Wrappers públicos
+     */
+    public double[] getCentroidDistanceSignature(Bitmap input) {
+        if (!nativeLibraryLoaded || input == null)
+            return new double[0];
+        try {
+            return nativeGetCentroidDistanceSignature(input);
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Error invocado nativeGetCentroidDistanceSignature", e);
+            return new double[0];
+        }
+    }
+
+    public double[] getComplexSignal(Bitmap input) {
+        if (!nativeLibraryLoaded || input == null)
+            return new double[0];
+        try {
+            return nativeGetComplexSignal(input);
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Error invocado nativeGetComplexSignal", e);
+            return new double[0];
+        }
+    }
 }
